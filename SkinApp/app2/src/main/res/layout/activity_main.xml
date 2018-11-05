@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/t_window_bg"
+    android:orientation="vertical">
+
+    <!--测试换肤==>图片-->
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="?actionBarSize"
+        android:background="@mipmap/toolbar"/>
+
+    <!--单个控件换字体-->
+    <Button
+        app:skinTypeface="@string/typeface2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="skinSelect"
+        android:text="个性换肤"
+        tools:ignore="MissingPrefix" />
+
+
+    <!--测试换肤==> viewPager 与 fragment-->
+    <cn.com.egova.skinapp2.widget.MyTabLayout
+        android:id="@+id/tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        app:tabIndicatorColor="@color/tabSelectedTextColor"
+        app:tabTextColor="@drawable/tab_selector"/>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+
+</LinearLayout>
