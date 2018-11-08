@@ -1,0 +1,23 @@
+ext {
+    // false: 组件模式
+    // true ：集成模式
+    isModule = true
+    android = [
+            compileSdkVersion: 26,
+            minSdkVersion    : 14,
+            targetSdkVersion : 26,
+            versionCode      : 1,
+            versionName      : "1.0"
+    ]
+
+    appId = ["app"  : "cn.com.egova.dnrouter",
+             "module1": "cn.com.egova.module1",
+             "module2" : "cn.com.egova.module2" ]
+
+    supportLibrary = "26.1.0"
+    dependencies = [
+            "appcompat-v7"     : "com.android.support:appcompat-v7:${supportLibrary}",
+    ]
+}
+
+
