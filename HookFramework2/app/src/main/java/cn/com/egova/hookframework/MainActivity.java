@@ -1,20 +1,16 @@
 package cn.com.egova.hookframework;
 
+import android.app.Activity;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
-import cn.com.egova.hookframework.activities.SceondActivity;
-import cn.com.egova.hookframework.activities.ThirdActivity;
-import cn.com.egova.hookframework.activities.ThreeActivity;
-import dalvik.system.PathClassLoader;
-
-public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener {
     private static final String TAG = "MainActivity";
     private ViewHolder holder;
 
@@ -24,22 +20,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         View rootView = LayoutInflater.from(this).inflate(R.layout.activity_main, null);
         holder = new ViewHolder(rootView);
         setContentView(rootView);
-
-        PathClassLoader classLoader = new PathClassLoader();
     }
 
     @Override
     public void onClick(View v) {
         int resId = v.getId();
+        String pkgName = "cn.com.egova.plugin";
         if (resId == R.id.jump2) {
-            jumpTo(SceondActivity.class);
-
+//            jumpTo(SceondActivity.class);                                       //激活本app的SecondActivity
+            jumpToPlugin(pkgName, pkgName + ".SceondActivity");         //激活插件的SecondActivity
         } else if (resId == R.id.jump3) {
-            jumpTo(ThreeActivity.class);
-
+//            jumpTo(ThreeActivity.class);
+            jumpToPlugin(pkgName, pkgName + ".ThreeActivity");
         } else if (resId == R.id.jump4) {
-            jumpTo(ThirdActivity.class);
-
+//            jumpTo(ThirdActivity.class);
+            jumpToPlugin(pkgName, pkgName + ".ThirdActivity");
         } else if (resId == R.id.logout) {
             logout();
         }
@@ -47,6 +42,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void jumpTo(Class clazz) {
         Intent intent = new Intent(this, clazz);
+        startActivity(intent);
+    }
+
+    public void jumpToPlugin(String pkgName, String className) {
+        Intent intent = new Intent();
+        intent.setComponent(new ComponentName(pkgName, className));  //包名+全类名
         startActivity(intent);
     }
 
