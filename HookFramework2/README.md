@@ -46,7 +46,6 @@ WindowManagerGlobal.initialize();
 Activity a = performLaunchActivity(r, customIntent);
 ```              
  
-   
 ```
 Activity activity = null;
 try {
@@ -67,9 +66,27 @@ try {
     }
 }
 ```     
-    
+   
    
 ```
+//LoadedApk.java    getClassLoader()
+ mClassLoader = ApplicationLoaders.getDefault().getClassLoader(zip, lib,mBaseClassLoader);
+``` 
+
+
+```
+//ApplicationLoaders.java     getClassLoader()
+Trace.traceBegin(Trace.TRACE_TAG_ACTIVITY_MANAGER, zip);
+PathClassLoader pathClassloader =
+    new PathClassLoader(zip, libPath, parent);
+Trace.traceEnd(Trace.TRACE_TAG_ACTIVITY_MANAGER);
+
+mLoaders.put(zip, pathClassloader);
+return pathClassloader;
+```
+   
+```
+//Instrumentation.java  newActivity()
 public Activity newActivity(ClassLoader cl, String className,
         Intent intent)
         throws InstantiationException, IllegalAccessException,
@@ -78,7 +95,48 @@ public Activity newActivity(ClassLoader cl, String className,
 }      
 ``` 
          
-从上面的启动过程可以看出，Activity的实例化是启动过程中才进行的，并不是应用程序一启动就开始。所以我们将要融合宿主与插件dex文件的步骤放在Application中进行，这样才能保证在启动插件Activity之前dex文件肯定已经融合过了。       
++ 从上面的启动过程可以看出，Activity中负责加载相关dex文件的是PathClassLoader，Activity的实例化是在启动过程中进行的，并不是应用程序一启动就开始。所以我们将要融合宿主与插件dex文件的步骤放在Application中进行，这样才能保证在启动插件Activity之前dex文件肯定已经融合过了。 
+
++ Hook 技术加载插件，**宿主程序的LaunchActivity必须是继承Activity， 而不能是AppCompatActivity， 否则会报错**：`java.lang.IllegalAccessError: Class ref in pre-verified class resolved to unexpected implementation  ` ，原因暂时不清楚。    
+
+# 关于app的静态资源加载
+AssetManager 是用来加载apk资源文件的核心类。它提供2个重要方法：
++ addAssetPath：将资源文件添加到应用中来；
++ ensureStringBlocks：实例化StringBlocks数组(apk中的静态资源文件最终都会存储到 StringBlock)，并对其进行赋值。
+
+如果apk正常安装，上述两个方法不需要我们手动调用，系统会帮我们完成，但如果是插件，则需要我们手动调用一下。并且这两个方法都是系统@hide注解的方法，所有只能通过反射调用。
+
+> apk   resource StringBlocks
+> string.xml  --->StringBlock
+> color.xml ----->StringBlock
+> anim.xml ------>StringBlock
+> ensureStringBlocks() ----> StringBlocks数组 ----> 当我们使用Resource.getDrawable()、getText() 等方法时，都是从StringBlocks中获取对应资源。
+
+```
+/**
+ * 加载插件apk的资源
+ */
+private void initResources() {
+    String apkPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + Const.PLUGIN_APK_NAME;
+    try {
+        assetManager = AssetManager.class.newInstance();
+        Method addAssetPathMethod = assetManager.getClass().getDeclaredMethod("addAssetPath", String.class);
+        addAssetPathMethod.setAccessible(true);
+        addAssetPathMethod.invoke(assetManager, apkPath);
+
+        //手动实例化插件的StringBlocks数组
+        Method ensureStringBlocksMethod = assetManager.getClass().getDeclaredMethod("ensureStringBlocks");
+        ensureStringBlocksMethod.setAccessible(true);
+        ensureStringBlocksMethod.invoke(assetManager);
+
+        //实例化resourecs
+        Resources supResources = getResources();
+        newResource = new Resources(assetManager, supResources.getDisplayMetrics(), supResources.getConfiguration());
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
+```
         
   
 
